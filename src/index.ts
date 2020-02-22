@@ -1,27 +1,27 @@
 import "reflect-metadata";
 import express from 'express'
 import { ApolloServer } from 'apollo-server-express'
+import { buildSchema } from "type-graphql";
+import { UserResolver } from "./UserResolver";
+import { createConnection } from "typeorm";
+
 
 (async ()=>{
     const app = express();
     app.get('/', (_, res) => res.send('Hello'));
 
-    const apolloServer = new ApolloServer({
-        typeDefs:`
-            type Query {
-                hello: String!
-            }
-        `,
-        resolvers: {
-            Query: {
-                hello: () => "hello world"
-            }
-        }
+    // This is where we create a connection between typeORM and the database.
+    // Config for this is in ormconfig.json
+    await createConnection();
 
+    const apolloServer = new ApolloServer({
+        schema: await buildSchema({
+            resolvers: [UserResolver]
+        })
     });
 
     apolloServer.applyMiddleware({ app });
-    
+
     app.listen(4000, () => {
         console.log('express server started')
     });
